@@ -1,0 +1,64 @@
+from pathlib import Path
+from dotenv import load_dotenv
+from prompts import SCHEMA_EXTRACTION_PROMPT
+from parser import parse_pdf
+from schemaextraction import organize_resume
+import re
+
+load_dotenv()
+
+
+SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
+
+CAP = 8
+
+BANDS = [
+    (0,  1,  60, 62),
+    (1,  3,  66, 74),
+    (3,  5,  76, 84),
+    (5,  9,  86, 99),
+]
+
+# the amazing thing is that each bullet is already it's own individual string
+
+_IMPACT = re.compile(r"""
+      \d\s?% #for percentages
+    | \$\s?\d  #dollars
+    | \d\s?[xX]\b #multiples
+    | \d\+ #growth
+    | \d\s?(?:[KkMm]|million|thousand|billion)\b #larger values esp for finance
+""", re.VERBOSE)
+
+def is_quantified(bullet: str) -> bool:
+    return bool(bullet) and bool(_IMPACT.search(bullet))
+
+def impact_raw(resume):
+    count = 0
+    for exp in resume.experiences:
+        for bullet in exp.bullets:
+            if is_quantified(bullet):
+                count += 1
+    return count, min(count, CAP)
+
+def rating(raw: float) -> int:
+    for lo, hi, r_lo, r_hi in BANDS:
+        if lo <= raw < hi:
+            frac = (raw - lo) / (hi - lo)
+            return round(r_lo + frac * (r_hi - r_lo))
+    return 99 if raw >= BANDS[-1][1] else BANDS[0][2]
+
+
+#V2 will include an additional layer with LLM-based nuances
+#Currently there will be dead spots 61–65, 71–75, or 81–85
+
+
+RESUME_DIR = Path("resume_batch_impact_40")
+
+if __name__ == "__main__":
+    for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
+        raw_text = parse_pdf(str(pdf_path))
+        result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
+        count, raw_impact = impact_raw(result)
+        impact_rating = rating(raw_impact)
+        print(f"{pdf_path.name}: raw count:={count}, rating:={impact_rating}")
+    

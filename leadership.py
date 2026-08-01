@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from dotenv import load_dotenv
 from prompts import SCHEMA_EXTRACTION_PROMPT
 from parser import parse_pdf
