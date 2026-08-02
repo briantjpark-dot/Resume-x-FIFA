@@ -33,7 +33,7 @@ def honors_multiplier(honors: list[str]) -> float:
             count += 1
     return 1.0 + PER_HONOR * min(count, MAX_HONORS)
 
-def rating(edu):
+def edu_rating(edu):
     base = raw_gpa_score(edu.gpa) if edu.gpa is not None else 75.0
     return round(min(99, base * honors_multiplier(edu.honors)))
 
@@ -46,5 +46,5 @@ if __name__ == "__main__":
         edu = result.education[0] if result.education else Education()
         gpa_score = raw_gpa_score(edu.gpa) if edu.gpa is not None else 75.0
         multiplier = honors_multiplier(edu.honors)
-        education_rating = rating(edu)
+        education_rating = edu_rating(edu)
         print(f"{pdf_path.name}: gpa_score={gpa_score}, honors_multiplier={multiplier}, rating={education_rating}")

@@ -74,7 +74,7 @@ def diminishing_sum(bucket_weights: list[int]) -> float:
         t += 1
     return total
 
-def rating(raw: float) -> int:
+def lea_rating(raw: float) -> int:
     for lo, hi, r_lo, r_hi in BANDS:
         if lo <= raw < hi:
             frac = (raw - lo) / (hi - lo)
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         leadership_buckets = [exp.leadership_bucket for exp in result.experiences]
         leadership_weighted = [bucket_weight(bucket) for bucket in leadership_buckets]
         leadership_weighted_total = diminishing_sum(leadership_weighted)
-        leadership_rating = rating(leadership_weighted_total)
+        leadership_rating = lea_rating(leadership_weighted_total)
         print(f"{pdf_path.name}: score={leadership_weighted_total:.2f} rating={leadership_rating}")
 
 

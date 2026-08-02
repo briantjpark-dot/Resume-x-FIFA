@@ -40,7 +40,7 @@ def impact_raw(resume):
                 count += 1
     return count, min(count, CAP)
 
-def rating(raw: float) -> int:
+def imp_rating(raw: float) -> int:
     for lo, hi, r_lo, r_hi in BANDS:
         if lo <= raw < hi:
             frac = (raw - lo) / (hi - lo)
@@ -59,6 +59,6 @@ if __name__ == "__main__":
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
         count, raw_impact = impact_raw(result)
-        impact_rating = rating(raw_impact)
+        impact_rating = imp_rating(raw_impact)
         print(f"{pdf_path.name}: raw count:={count}, rating:={impact_rating}")
     

@@ -45,8 +45,8 @@ class Education(BaseModel):
     honors: list[str] = Field(default_factory=list) #counted as a bonus
 
 class Skills(BaseModel):
-    languages: list[str] = Field(default_factory=list)
-    technical_skills: list[str] = Field(default_factory=list)  
+    languages: list[str] = Field(default_factory=list) 
+    technical_skills: list[str] = Field(default_factory=list) #not going to touch for v1, maybe a small boost to overall rating
 
 #Project folds into experiences
 class Experience(BaseModel):
