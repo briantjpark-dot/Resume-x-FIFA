@@ -34,12 +34,15 @@ LeadershipBucket = Literal[
 
 #im assuming some languages and technicals will be weighted harder than others
 
+#make the university a literal list with other as a choice for non 5Cs
+
 class Education(BaseModel):
     university: Optional[str] = None
     degree: Optional[str] = None
-    major: Optional[str] = None
-    courseload: list[str] = Field(default_factory=list)
+    major: Optional[str] = None #not used for v1 calculations
+    courseload: list[str] = Field(default_factory=list) #not used for v1 calculations
     gpa: Optional[float] = None
+    honors: list[str] = Field(default_factory=list) #counted as a bonus
 
 class Skills(BaseModel):
     languages: list[str] = Field(default_factory=list)
