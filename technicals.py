@@ -144,10 +144,10 @@ BOTTOM = {
 }
 
 BANDS = [
-    (0,   9,   60, 72), 
+    (0,   9,   60, 72),
     (9,   13,  73, 78),
-    (13,  18,  82, 90),
-    (18,  22,  88, 99),
+    (13,  19.4,  82, 90),
+    (19.4,  24,  88, 99),
 ]
 
 #Using the same weight, sum, and band logic from leadership -> these functions are redundant but i 
@@ -170,7 +170,7 @@ def diminishing_sum(bucket_weights: list[int]) -> float:
     total = 0
     t = 0
     for weight in weight_sorted:
-        total += weight * (0.5 ** t)
+        total += weight * (0.6 ** t)
         t += 1
     return total
 
