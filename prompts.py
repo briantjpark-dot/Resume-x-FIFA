@@ -8,11 +8,16 @@ OUTPUT RULES
 
 STRUCTURE
 {
+  "name": <string> | null,
+  "last_name": <string> | null,
   "education": [ <one object per school> ],
   "skills": { ... } | null,
   "experiences": [ <one object per role/project/activity> ],
   "awards": [ <strings> ]
 }
+
+name — the resume owner's first (given) name, exactly as written (usually at the top of the resume) | null if absent
+last_name — the resume owner's last (family) name, exactly as written | null if absent
 
 education — list, one object per school:
   "university": school name | null

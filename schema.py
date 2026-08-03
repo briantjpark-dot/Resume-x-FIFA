@@ -56,6 +56,8 @@ class Experience(BaseModel):
     bullets: list[str] = Field(default_factory=list)
 
 class Resume(BaseModel):
+    name: Optional[str] = None
+    last_name: Optional[str] = None
     education: list[Education] = Field(default_factory=list)
     skills: Optional[Skills] = None
     experiences: list[Experience] = Field(default_factory=list)

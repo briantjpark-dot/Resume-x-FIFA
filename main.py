@@ -26,21 +26,24 @@ WEIGHTS = {
 
 #for v2 i'll make the weights of the attributes change depending on major, similar to how FIFA rates attributes for a striker differen to a CB
 
-def run_full_pipeline(resume_dir: Path) -> dict:
-    combined_ratings = {}
+def attributes_pipeline(resume_dir: Path) -> dict:
+    parsed_resumes = {}
     for pdf_path in sorted(resume_dir.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
-        combined_ratings[pdf_path.name] = {
-            "caliber": rate_caliber(result),
-            "education": rate_education(result),
-            "impact": rate_impact(result),
-            "leadership": rate_leadership(result),
-            "stamina": rate_stamina(result),
-            "technical": rate_technical(result),
+        parsed_resumes[pdf_path.name] = {
+            "result": result,
+            "ratings": {
+                "caliber": rate_caliber(result),
+                "education": rate_education(result),
+                "impact": rate_impact(result),
+                "leadership": rate_leadership(result),
+                "stamina": rate_stamina(result),
+                "technical": rate_technical(result),
+            },
         }
     print("Indivudal Ratings Finished")
-    return combined_ratings
+    return parsed_resumes
 
 def raw_overall(combined_ratings):
     weighted_sum = sum(combined_ratings[k] * WEIGHTS[k] for k in WEIGHTS)
@@ -48,31 +51,45 @@ def raw_overall(combined_ratings):
     return weighted_sum / total_weight
 
 #Spreading function because raw overalls are clumped in the 75~85 ish range
-def stretch(raw_overall, raw_lo=64, raw_hi=86, target_lo=60, target_hi=92):
+def final_overall(raw_overall, raw_lo=64, raw_hi=86, target_lo=60, target_hi=92):
     frac = (raw_overall - raw_lo) / (raw_hi - raw_lo)
     return max(60, min(95, round(target_lo + frac * (target_hi - target_lo))))
 
-def final_overall(raw):
-    base = stretch(raw)   # caps at 92
+def card_type(raw):
+    base = final_overall(raw)   # caps at 92
     if raw >= 88: #beginning condition to be considered for a toty
-        # map raw 88-99 onto 93-95 (the toty range)
+        # map raw 88-99 onto 93-97 (the toty range)
         frac = (raw - 88) / (99 - 88)
-        return round(93 + frac * (95 - 93)), "toty"
+        return round(93 + frac * (97 - 93)), "toty"
     return base, "base"
+
+def build_card(resume_dir: Path) -> dict:
+    parsed_resumes = attributes_pipeline(resume_dir)
+    cards = {}
+    for filename, data in parsed_resumes.items():
+        result = data["result"]
+        ratings = data["ratings"]
+        overall, tier = card_type(raw_overall(ratings))
+        education = result.education[0] if result.education else None
+        cards[filename] = {
+            "name": " ".join(part for part in [result.name, result.last_name] if part) or None,
+            "overall": overall,
+            "tier": tier,
+            "combined_ratings": ratings,
+            "university": education.university if education else None,
+            "major": education.major if education else None,
+        }
+    return cards
 
 
 if __name__ == "__main__":
-    final_results = run_full_pipeline(RESUME_DIR)
+    full_card_build = build_card(RESUME_DIR)
 
-    if not final_results:
+    if not full_card_build:
         print(f"\n No PDF files were found in: {RESUME_DIR.resolve()}")
     else:
         print("\n=== FULL PIPELINE RESULTS ===")
-        for filename, profile in final_results.items():
+        for filename, card in full_card_build.items():
             print(f"\n {filename}")
-            for category, rating in profile.items():
-                print(f"  {category:<12}: {rating}")
-            raw = raw_overall(profile)
-            print(f"  {'raw overall':<12}: {raw}")
-            print(f"  {'overall':<12}: {stretch(raw)}")
-
+            for field, value in card.items():
+                print(f"  {field:<16}: {value}")
