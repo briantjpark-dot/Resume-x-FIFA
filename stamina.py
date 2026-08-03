@@ -11,10 +11,10 @@ RESUME_DIR = Path("resume_batch_stamina_40")
 SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
 
 BANDS = [
-    (0,   15,  60, 68),
-    (15,  38,  69, 76),
-    (38,  55,  78, 86),
-    (55,  95,  88, 99),
+    (0,   15,  45, 62),
+    (15,  38,  64, 74),
+    (38,  55,  76, 87),
+    (57,  99,  88, 99),
 ]
 
 def correct_format(date_str):
@@ -59,28 +59,31 @@ def stam_rating(raw: float) -> int:
             return round(r_lo + frac * (r_hi - r_lo))
     return 99 if raw >= BANDS[-1][1] else BANDS[0][2]
 
-def full_stamina_rating():
+def rate_stamina(result) -> int:
+    periods = []
+    for exp in result.experiences:
+        start = correct_format(exp.start_date)
+        if start is None:
+            continue
+        end = correct_format(exp.end_date)
+        start_str = start.strftime("%m-%Y")
+        end_str = end.strftime("%m-%Y") if end else None
+        periods.append(get_period(start_str, end_str))
+    stamina_total = diminishing_sum(periods)
+    return stam_rating(stamina_total)
+
+def full_stamina_rating(resume_dir):
     ratings = {}
-    for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
+    for pdf_path in sorted(resume_dir.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
-        periods = []
-        for exp in result.experiences:
-            start = correct_format(exp.start_date)
-            if start is None:
-                continue
-            end = correct_format(exp.end_date)
-            start_str = start.strftime("%m-%Y")
-            end_str = end.strftime("%m-%Y") if end else None
-            periods.append(get_period(start_str, end_str))
-        stamina_total = diminishing_sum(periods)
-        ratings[pdf_path.name] = stam_rating(stamina_total)
+        ratings[pdf_path.name] = rate_stamina(result)
     return ratings
 
 
 
 if __name__ == "__main__":
-    results = full_stamina_rating()
+    results = full_stamina_rating(RESUME_DIR)
     print("\n--- Stamina Ratings ---")
     for resume_name, rating in results.items():
         print(f"{resume_name}: {rating}")

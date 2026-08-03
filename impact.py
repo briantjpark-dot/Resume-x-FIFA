@@ -12,10 +12,10 @@ SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
 CAP = 8
 
 BANDS = [
-    (0,  1,  60, 62),
-    (1,  3,  66, 74),
-    (3,  5,  76, 84),
-    (5,  9,  86, 99),
+    (0,  1,  45, 62),
+    (1,  3,  64, 74),
+    (3,  5,  76, 87),
+    (5,  11,  88, 99),
 ]
 
 # the amazing thing is that each bullet is already it's own individual string
@@ -46,20 +46,23 @@ def imp_rating(raw: float) -> int:
             return round(r_lo + frac * (r_hi - r_lo))
     return 99 if raw >= BANDS[-1][1] else BANDS[0][2]
 
-def full_impact_rating():
+def rate_impact(result) -> int:
+    count, raw_impact = impact_raw(result)
+    return imp_rating(raw_impact)
+
+def full_impact_rating(resume_dir):
     ratings = {}
-    for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
+    for pdf_path in sorted(resume_dir.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
-        count, raw_impact = impact_raw(result)
-        ratings[pdf_path.name] = imp_rating(raw_impact)
+        ratings[pdf_path.name] = rate_impact(result)
     return ratings
 
 #V2 will include an additional layer with LLM-based nuances
 #Currently there will be dead spots 61–65, 71–75, or 81–85
 
 if __name__ == "__main__":
-    results = full_impact_rating()
+    results = full_impact_rating(RESUME_DIR)
     print("\n--- Impact Ratings ---")
     for resume_name, rating in results.items():
         print(f"{resume_name}: {rating}")

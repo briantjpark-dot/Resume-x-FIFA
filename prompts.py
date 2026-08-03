@@ -29,7 +29,7 @@ skills — one object, or null if there is no skills section:
 experiences — list, one object per job, internship, club role, research, project, OR volunteering:
   "title": exact title as written (e.g. "Co-President", "SWE Intern") | null
   "leadership_bucket": condense the title into ONE term from the list below. This is neutral vocabulary matching — pick the closest KIND of role, with no judgment about importance. If it is not a leadership role, or you are unsure, use "member".
-    Valid values: founder, president, captain, editor_in_chief, vice_president, director, chair, treasurer, secretary, officer, team_lead, manager, resident_advisor, teaching_assistant, member
+  Valid values: founder", "president", "captain", "editor_in_chief", "chief executive officer", "chief financial officer", "director", "vice_president", "chair", "treasurer", "secretary", "project manager", "officer", "portfolio manager", "senior analyst", "editor", "team_lead", "manager", "resident_advisor", "teaching_assistant", "member"
   "organization": company / club / lab / school name | null
   "type": exactly one of: work, internship, club, research, fellowship, project, or volunteer
   "start_date": normalize to "MM-YYYY" (e.g. "09-2023"). If only a year is given, use "01" as the month. | null if absent

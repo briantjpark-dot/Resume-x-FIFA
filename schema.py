@@ -15,6 +15,7 @@ LeadershipBucket = Literal[
     "chair",
     "treasurer",
     "secretary",
+    "project manager",
     "officer",
     "portfolio manager",
     "senior analyst",
@@ -24,11 +25,7 @@ LeadershipBucket = Literal[
     "manager",
     "resident_advisor",
     "teaching_assistant",
-    "member",
-    "analyst",
-    "consultant",
-    "intern",
-    "research assistant"
+    "member"
 ]
 
 

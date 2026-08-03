@@ -24,7 +24,7 @@ MAX_HONORS = 3 # max 9% for honors boost
 #k = 2.5?
 
 def raw_gpa_score(gpa: float) -> float:
-    rating = 60 + 39 * (1 / (1 + math.exp(-2.5 * (gpa - 3.3))))
+    rating = 53 + 39 * (1 / (1 + math.exp(-2.5 * (gpa - 3.3))))
     return rating
 
 def honors_multiplier(honors: list[str]) -> float:
@@ -35,20 +35,23 @@ def honors_multiplier(honors: list[str]) -> float:
     return 1.0 + PER_HONOR * min(count, MAX_HONORS)
 
 def edu_rating(edu):
-    base = raw_gpa_score(edu.gpa) if edu.gpa is not None else 75.0
+    base = raw_gpa_score(edu.gpa) if edu.gpa is not None else 70.0
     return round(min(99, base * honors_multiplier(edu.honors)))
 
-def full_education_rating():
+def rate_education(result) -> int:
+    edu = result.education[0] if result.education else Education()
+    return edu_rating(edu)
+
+def full_education_rating(resume_dir):
     ratings = {}
-    for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
+    for pdf_path in sorted(resume_dir.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
-        edu = result.education[0] if result.education else Education()
-        ratings[pdf_path.name] = edu_rating(edu)
+        ratings[pdf_path.name] = rate_education(result)
     return ratings
 
 if __name__ == "__main__":
-    results = full_education_rating()
+    results = full_education_rating(RESUME_DIR)
     print("\n--- Education Ratings ---")
     for resume_name, rating in results.items():
         print(f"{resume_name}: {rating}")

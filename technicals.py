@@ -198,10 +198,10 @@ BOTTOM = {
 }
 
 BANDS = [
-    (0,   9,   60, 72),
-    (9,   13,  73, 78),
-    (13,  19.4,  82, 90),
-    (19.4,  24,  88, 99),
+    (0,   9,   45, 62),
+    (9,   13,  64, 74),
+    (13,  19.4,  76, 87),
+    (19.4,  26,  88, 99),
 ]
 
 #Using the same weight, sum, and band logic from leadership -> these functions are redundant but i 
@@ -235,21 +235,24 @@ def tech_rating(raw: float) -> int:
             return round(r_lo + frac * (r_hi - r_lo))
     return 99 if raw >= BANDS[-1][1] else BANDS[0][2]
 
-def full_technical_rating():
+def rate_technical(result) -> int:
+    skills = result.skills if result.skills else Skills()
+    normalized_skills = [normalize(skill) for skill in skills.technical_skills]
+    technical_weighted = [technical_weight(skill) for skill in normalized_skills]
+    technical_weighted_total = diminishing_sum(technical_weighted)
+    return tech_rating(technical_weighted_total)
+
+def full_technical_rating(resume_dir):
     ratings = {}
-    for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
+    for pdf_path in sorted(resume_dir.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
-        skills = result.skills if result.skills else Skills()
-        normalized_skills = [normalize(skill) for skill in skills.technical_skills]
-        technical_weighted = [technical_weight(skill) for skill in normalized_skills]
-        technical_weighted_total = diminishing_sum(technical_weighted)
-        ratings[pdf_path.name] = tech_rating(technical_weighted_total)
-    return ratings   
+        ratings[pdf_path.name] = rate_technical(result)
+    return ratings
 
 
 if __name__ == "__main__":
-    results = full_technical_rating()
+    results = full_technical_rating(RESUME_DIR)
     print("\n--- Technical Ratings ---")
     for resume_name, rating in results.items():
         print(f"{resume_name}: {rating}")

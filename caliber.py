@@ -25,10 +25,10 @@ BOTTOM = {
 }
 
 BANDS = [
-    (0,   6,   60, 66),
-    (6,   12,  68, 78),
-    (12,  16,  80, 86),
-    (16,  24,  88, 99),
+    (0,   6,   45, 62),
+    (6,   12,  64, 74),
+    (12,  16,  76, 87),
+    (16,  28,  88, 99),
 ]
 
 def bucket_weight(experience_type: str) -> int:
@@ -54,20 +54,23 @@ def cal_rating(raw: float) -> int:
             return round(r_lo + frac * (r_hi - r_lo))
     return 99 if raw >= BANDS[-1][1] else BANDS[0][2]
 
-def full_caliber_rating():
+def rate_caliber(result) -> int:
+    experience_types = [exp.type for exp in result.experiences]
+    type_weighted = [bucket_weight(experience_type) for experience_type in experience_types]
+    caliber_weighted_total = diminishing_sum(type_weighted)
+    return cal_rating(caliber_weighted_total)
+
+def full_caliber_rating(resume_dir):
     ratings = {}
-    for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
+    for pdf_path in sorted(resume_dir.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
-        experience_types = [exp.type for exp in result.experiences]
-        type_weighted = [bucket_weight(experience_type) for experience_type in experience_types]
-        caliber_weighted_total = diminishing_sum(type_weighted)
-        ratings[pdf_path.name] = cal_rating(caliber_weighted_total)
+        ratings[pdf_path.name] = rate_caliber(result)
     return ratings
 
 
 if __name__ == "__main__":
-    results = full_caliber_rating()
+    results = full_caliber_rating(RESUME_DIR)
     print("\n--- Caliber Ratings ---")
     for resume_name, rating in results.items():
         print(f"{resume_name}: {rating}")
