@@ -57,8 +57,8 @@ def final_overall(raw_overall, raw_lo=64, raw_hi=86, target_lo=60, target_hi=92)
 
 def card_type(raw):
     base = final_overall(raw)   # caps at 92
-    if raw >= 88: #beginning condition to be considered for a toty
-        # map raw 88-99 onto 93-97 (the toty range)
+    if raw >= 88: #beginning condition to be considered for a icon
+        # map raw 88-99 onto 93-97 (the icon range)
         frac = (raw - 88) / (99 - 88)
         return round(93 + frac * (97 - 93)), "toty"
     return base, "base"
@@ -71,11 +71,13 @@ def build_card(resume_dir: Path) -> dict:
         ratings = data["ratings"]
         overall, tier = card_type(raw_overall(ratings))
         education = result.education[0] if result.education else None
+        full_name = " ".join(part for part in [result.name, result.last_name] if part) or None
         cards[filename] = {
-            "name": " ".join(part for part in [result.name, result.last_name] if part) or None,
+            "name": full_name,
+            "last name": result.last_name,
             "overall": overall,
-            "tier": tier,
-            "combined_ratings": ratings,
+            "card_tier": tier,
+            "stats": ratings,
             "university": education.university if education else None,
             "major": education.major if education else None,
         }
