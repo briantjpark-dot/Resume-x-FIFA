@@ -21,7 +21,7 @@ def organize_resume (text, prompt):
     )
     return response.parsed_output
 
-file_path = "resume_37_LEAD-mid.pdf"
+file_path = "sampleresume.pdf"
 
 if __name__ == "__main__":
     raw_text = parse_pdf(file_path)

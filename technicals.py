@@ -3,9 +3,10 @@ from dotenv import load_dotenv
 from prompts import SCHEMA_EXTRACTION_PROMPT
 from parser import parse_pdf
 from schemaextraction import organize_resume
-from schema import Resume, Skills
+from schema import Skills
 
 load_dotenv()
+RESUME_DIR = Path("resume_batch_tech_40")
 SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
 
 ALIASES = {
@@ -33,6 +34,43 @@ ALIASES = {
     "cplusplus": "c++",
     "compilers": "compiler design",
     "os": "operating systems",
+    "svm": "support vector machines",
+    "support vector machine": "support vector machines",
+    "cnn": "convolutional neural networks",
+    "cnns": "convolutional neural networks",
+    "rnn": "recurrent neural networks",
+    "rnns": "recurrent neural networks",
+    "lstm": "recurrent neural networks",
+    "lstms": "recurrent neural networks",
+    "k-means": "clustering",
+    "k-means clustering": "clustering",
+    "xgboost": "gradient boosting",
+    "boosting": "gradient boosting",
+    "gradient boosted trees": "gradient boosting",
+    "sklearn": "scikit-learn",
+    "torch": "pytorch",
+    "tf": "tensorflow",
+    "keras": "tensorflow",
+    "object recognition": "object detection",
+    "semantic segmentation": "image segmentation",
+    "instance segmentation": "image segmentation",
+    "k8s": "kubernetes",
+    "apache kafka": "kafka",
+    "spark": "apache spark",
+    "pyspark": "apache spark",
+    "black scholes": "black-scholes model",
+    "black-scholes": "black-scholes model",
+    "monte carlo": "monte carlo simulation",
+    "options pricing model": "options pricing",
+    "option pricing": "options pricing",
+    "advanced encryption standard": "aes",
+    "rivest-shamir-adleman": "rsa",
+    "ecc": "elliptic curve cryptography",
+    "firmware": "firmware development",
+    "real-time operating system": "rtos",
+    "real time operating systems": "rtos",
+    "microcontrollers": "microcontroller programming",
+    "microcontroller": "microcontroller programming",
 
     # --- MIDDLE tier ---
     "py": "python",
@@ -88,21 +126,38 @@ ALIASES = {
 }
 
 TOP = {
+    "aws",
     "linux",
-    "machine learning",
-    "deep learning",
-    "artificial intelligence",
-    "computer vision",
-    "natural language processing",
-    "reinforcement learning",
-    "distributed systems",
+    "decision trees",
+    "random forests",
+    "gradient boosting",
+    "clustering",
+    "support vector machines",
+    "convolutional neural networks",
+    "recurrent neural networks",
+    "transformers",
+    "pytorch",
+    "tensorflow",
+    "scikit-learn",
+    "object detection",
+    "image segmentation",
+    "opencv",
+    "q-learning",
+    "kubernetes",
+    "kafka",
+    "apache spark",
     "algorithmic trading",
-    "quantitative finance",
-    "financial engineering",
-    "cryptography",
-    "blockchain",
+    "options pricing",
+    "monte carlo simulation",
+    "black-scholes model",
+    "derivatives pricing",
+    "rsa",
+    "aes",
+    "elliptic curve cryptography",
     "smart contracts",
-    "embedded systems",
+    "firmware development",
+    "rtos",
+    "microcontroller programming",
     "cuda",
     "c++",
     "compiler design",
@@ -122,7 +177,6 @@ MIDDLE = {
     "data engineering",
     "data analysis",
     "cloud computing",
-    "aws",
     "linear algebra",
     "api development",
     "react",
@@ -160,9 +214,9 @@ def technical_weight(bucket: str) -> int:
     if bucket in TOP:
         return 10
     if bucket in MIDDLE:
-            return 5
+        return 5
     if bucket in BOTTOM:
-            return 2
+        return 2
     return 0
 
 def diminishing_sum(bucket_weights: list[int]) -> float:
@@ -181,9 +235,8 @@ def tech_rating(raw: float) -> int:
             return round(r_lo + frac * (r_hi - r_lo))
     return 99 if raw >= BANDS[-1][1] else BANDS[0][2]
 
-RESUME_DIR = Path("resume_batch_tech_40")
-
-if __name__ == "__main__":
+def full_technical_rating():
+    ratings = {}
     for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
@@ -191,5 +244,12 @@ if __name__ == "__main__":
         normalized_skills = [normalize(skill) for skill in skills.technical_skills]
         technical_weighted = [technical_weight(skill) for skill in normalized_skills]
         technical_weighted_total = diminishing_sum(technical_weighted)
-        technical_rating = tech_rating(technical_weighted_total)
-        print(f"{pdf_path.name}: rating={technical_rating}")
+        ratings[pdf_path.name] = tech_rating(technical_weighted_total)
+    return ratings   
+
+
+if __name__ == "__main__":
+    results = full_technical_rating()
+    print("\n--- Technical Ratings ---")
+    for resume_name, rating in results.items():
+        print(f"{resume_name}: {rating}")

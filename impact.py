@@ -6,8 +6,7 @@ from schemaextraction import organize_resume
 import re
 
 load_dotenv()
-
-
+RESUME_DIR = Path("resume_batch_impact_40")
 SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
 
 CAP = 8
@@ -47,18 +46,21 @@ def imp_rating(raw: float) -> int:
             return round(r_lo + frac * (r_hi - r_lo))
     return 99 if raw >= BANDS[-1][1] else BANDS[0][2]
 
-
-#V2 will include an additional layer with LLM-based nuances
-#Currently there will be dead spots 61–65, 71–75, or 81–85
-
-
-RESUME_DIR = Path("resume_batch_impact_40")
-
-if __name__ == "__main__":
+def full_impact_rating():
+    ratings = {}
     for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
         count, raw_impact = impact_raw(result)
-        impact_rating = imp_rating(raw_impact)
-        print(f"{pdf_path.name}: raw count:={count}, rating:={impact_rating}")
+        ratings[pdf_path.name] = imp_rating(raw_impact)
+    return ratings
+
+#V2 will include an additional layer with LLM-based nuances
+#Currently there will be dead spots 61–65, 71–75, or 81–85
+
+if __name__ == "__main__":
+    results = full_impact_rating()
+    print("\n--- Impact Ratings ---")
+    for resume_name, rating in results.items():
+        print(f"{resume_name}: {rating}")
     

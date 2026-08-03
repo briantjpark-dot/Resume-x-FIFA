@@ -6,8 +6,7 @@ from schemaextraction import organize_resume
 from schema import Resume
 
 load_dotenv()
-
-
+RESUME_DIR = Path("resume_batch_40")
 SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
 
 
@@ -59,9 +58,9 @@ def bucket_weight(bucket: str) -> int:
     if bucket in TOP:
         return 10
     if bucket in MIDDLE:
-            return 5
+        return 5
     if bucket in BOTTOM:
-            return 1
+        return 1
     return 1
 
 
@@ -81,18 +80,20 @@ def lea_rating(raw: float) -> int:
             return round(r_lo + frac * (r_hi - r_lo))
     return 99 if raw >= BANDS[-1][1] else BANDS[0][2]
 
-
-
-RESUME_DIR = Path("resume_batch_40")
-
-if __name__ == "__main__":
+def full_leadership_rating():
+    ratings = {}
     for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
         leadership_buckets = [exp.leadership_bucket for exp in result.experiences]
         leadership_weighted = [bucket_weight(bucket) for bucket in leadership_buckets]
         leadership_weighted_total = diminishing_sum(leadership_weighted)
-        leadership_rating = lea_rating(leadership_weighted_total)
-        print(f"{pdf_path.name}: score={leadership_weighted_total:.2f} rating={leadership_rating}")
+        ratings[pdf_path.name] = lea_rating(leadership_weighted_total)
+    return ratings
 
 
+if __name__ == "__main__":
+    results = full_leadership_rating()
+    print("\n--- Leadership Ratings ---")
+    for resume_name, rating in results.items():
+        print(f"{resume_name}: {rating}")

@@ -3,12 +3,13 @@ from dotenv import load_dotenv
 from prompts import SCHEMA_EXTRACTION_PROMPT
 from parser import parse_pdf
 from schemaextraction import organize_resume
-from schema import Resume, Education
+from schema import Education
 import math
 
 load_dotenv()
-
+RESUME_DIR = Path("resume_batch_edu_40")
 SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
+
 HONORS_KEYWORDS = [
     "dean", "cum laude", "magna", "summa",
     "phi beta kappa", "honor society", "honors program", "honors college",
@@ -37,14 +38,17 @@ def edu_rating(edu):
     base = raw_gpa_score(edu.gpa) if edu.gpa is not None else 75.0
     return round(min(99, base * honors_multiplier(edu.honors)))
 
-RESUME_DIR = Path("resume_batch_edu_40")
-
-if __name__ == "__main__":
+def full_education_rating():
+    ratings = {}
     for pdf_path in sorted(RESUME_DIR.glob("*.pdf")):
         raw_text = parse_pdf(str(pdf_path))
         result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
         edu = result.education[0] if result.education else Education()
-        gpa_score = raw_gpa_score(edu.gpa) if edu.gpa is not None else 75.0
-        multiplier = honors_multiplier(edu.honors)
-        education_rating = edu_rating(edu)
-        print(f"{pdf_path.name}: gpa_score={gpa_score}, honors_multiplier={multiplier}, rating={education_rating}")
+        ratings[pdf_path.name] = edu_rating(edu)
+    return ratings
+
+if __name__ == "__main__":
+    results = full_education_rating()
+    print("\n--- Education Ratings ---")
+    for resume_name, rating in results.items():
+        print(f"{resume_name}: {rating}")

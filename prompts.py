@@ -31,7 +31,7 @@ experiences — list, one object per job, internship, club role, research, proje
   "leadership_bucket": condense the title into ONE term from the list below. This is neutral vocabulary matching — pick the closest KIND of role, with no judgment about importance. If it is not a leadership role, or you are unsure, use "member".
     Valid values: founder, president, captain, editor_in_chief, vice_president, director, chair, treasurer, secretary, officer, team_lead, manager, resident_advisor, teaching_assistant, member
   "organization": company / club / lab / school name | null
-  "type": exactly one of: work, club, research, project, volunteer
+  "type": exactly one of: work, internship, club, research, fellowship, project, or volunteer
   "start_date": normalize to "MM-YYYY" (e.g. "09-2023"). If only a year is given, use "01" as the month. | null if absent
   "end_date": same "MM-YYYY" format. If the role is ongoing ("Present", "Current"), use null. | null if absent
   "bullets": list of the description lines for this role, each a separate string, verbatim | []

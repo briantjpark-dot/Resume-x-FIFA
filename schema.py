@@ -53,7 +53,7 @@ class Experience(BaseModel):
     title: Optional[str] = None
     leadership_bucket: Optional[LeadershipBucket] = None
     organization: Optional[str] = None
-    type: Optional[Literal["work", "club", "research", "project", "volunteer"]] = None
+    type: Optional[Literal["work", "internship", "club", "research", "project", "fellowship", "volunteer"]] = None
     start_date: Optional[str] = None      # MM-YYYY
     end_date: Optional[str] = None        # None means ongoing, so if end_date = None, then we use datetitme and current date
     bullets: list[str] = Field(default_factory=list)
