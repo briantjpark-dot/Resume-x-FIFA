@@ -12,7 +12,7 @@ from stamina import rate_stamina
 from technicals import rate_technical
 
 load_dotenv()
-RESUME_DIR = Path("testresumes") #get claude to generate full tings here
+RESUME_PATH = Path("sampleresume.pdf") 
 SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
 
 WEIGHTS = {
@@ -26,24 +26,22 @@ WEIGHTS = {
 
 #for v2 i'll make the weights of the attributes change depending on major, similar to how FIFA rates attributes for a striker differen to a CB
 
-def attributes_pipeline(resume_dir: Path) -> dict:
-    parsed_resumes = {}
-    for pdf_path in sorted(resume_dir.glob("*.pdf")):
-        raw_text = parse_pdf(str(pdf_path))
-        result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
-        parsed_resumes[pdf_path.name] = {
-            "result": result,
-            "ratings": {
-                "caliber": rate_caliber(result),
-                "education": rate_education(result),
-                "impact": rate_impact(result),
-                "leadership": rate_leadership(result),
-                "stamina": rate_stamina(result),
-                "technical": rate_technical(result),
-            },
-        }
+def attributes_pipeline(pdf_path: Path) -> dict:
+    raw_text = parse_pdf(str(pdf_path))
+    result = organize_resume(raw_text, SCHEMA_EXTRACTION_PROMPT)
+    parsed_resume = {
+        "result": result,
+        "ratings": {
+            "caliber": rate_caliber(result),
+            "education": rate_education(result),
+            "impact": rate_impact(result),
+            "leadership": rate_leadership(result),
+            "stamina": rate_stamina(result),
+            "technical": rate_technical(result),
+        },
+    }
     print("Indivudal Ratings Finished")
-    return parsed_resumes
+    return parsed_resume
 
 def raw_overall(combined_ratings):
     weighted_sum = sum(combined_ratings[k] * WEIGHTS[k] for k in WEIGHTS)
@@ -63,35 +61,29 @@ def card_type(raw):
         return round(93 + frac * (97 - 93)), "toty"
     return base, "base"
 
-def build_card(resume_dir: Path) -> dict:
-    parsed_resumes = attributes_pipeline(resume_dir)
-    cards = {}
-    for filename, data in parsed_resumes.items():
-        result = data["result"]
-        ratings = data["ratings"]
-        overall, tier = card_type(raw_overall(ratings))
-        education = result.education[0] if result.education else None
-        full_name = " ".join(part for part in [result.name, result.last_name] if part) or None
-        cards[filename] = {
-            "name": full_name,
-            "last name": result.last_name,
-            "overall": overall,
-            "card_tier": tier,
-            "stats": ratings,
-            "university": education.university if education else None,
-            "major": education.major if education else None,
-        }
-    return cards
+def build_card(pdf_path: Path) -> dict:
+    data = attributes_pipeline(pdf_path)
+    result = data["result"]
+    ratings = data["ratings"]
+    overall, tier = card_type(raw_overall(ratings))
+    education = result.education[0] if result.education else None
+    full_name = " ".join(part for part in [result.name, result.last_name] if part) or None
+    return {
+        "name": full_name,
+        "last name": result.last_name,
+        "overall": overall,
+        "card_tier": tier,
+        "stats": ratings,
+        "university": education.university if education else None,
+        "major": education.major if education else None,
+    }
 
 
 if __name__ == "__main__":
-    full_card_build = build_card(RESUME_DIR)
-
-    if not full_card_build:
-        print(f"\n No PDF files were found in: {RESUME_DIR.resolve()}")
+    if not RESUME_PATH.exists():
+        print(f"\n No PDF file was found at: {RESUME_PATH.resolve()}")
     else:
-        print("\n=== FULL PIPELINE RESULTS ===")
-        for filename, card in full_card_build.items():
-            print(f"\n {filename}")
-            for field, value in card.items():
-                print(f"  {field:<16}: {value}")
+        card = build_card(RESUME_PATH)
+        print(f"\n {RESUME_PATH.name}")
+        for field, value in card.items():
+            print(f"  {field:<16}: {value}")
