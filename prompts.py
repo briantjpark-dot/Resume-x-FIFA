@@ -20,7 +20,8 @@ name — the resume owner's first (given) name, exactly as written (usually at t
 last_name — the resume owner's last (family) name, exactly as written | null if absent
 
 education — list, one object per school:
-  "university": school name | null
+  "university": condense the school name into ONE term from the list below. This is neutral name matching, not a judgment of prestige. If the school is not one of the Claremont Colleges listed, or you are unsure, use "other".
+  Valid values: "Pomona", "Pitzer", "CMC", "HMC", "Scripps", "other"
   "degree": e.g. "B.S.", "B.A." | null
   "major": field of study | null
   "courseload": list of explicitly listed course names | []

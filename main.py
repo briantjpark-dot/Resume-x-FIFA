@@ -12,8 +12,21 @@ from stamina import rate_stamina
 from technicals import rate_technical
 
 load_dotenv()
-RESUME_PATH = Path("sampleresume.pdf") 
+RESUME_PATH = Path("sampleresume.pdf")
 SCHEMA_EXTRACTION_MODEL = "claude-sonnet-4-6"
+
+LOGO_DIR = Path("school logos")
+LOGO_MAP = {
+    "Pomona": "Pomona_Color.svg",
+    "Pitzer": "Pitzer_Color.png",
+    "CMC": "CMC_Color.svg",
+    "HMC": "HMC_Color.svg",
+    "Scripps": "Scripps_Color.png",
+    "other": "placeholder.svg",
+}
+
+def choose_logo(university: str | None) -> Path:
+    return LOGO_DIR / LOGO_MAP.get(university, "placeholder.svg")
 
 WEIGHTS = {
     "caliber":    1.0,
@@ -76,6 +89,7 @@ def build_card(pdf_path: Path) -> dict:
         "stats": ratings,
         "university": education.university if education else None,
         "major": education.major if education else None,
+        "school logo": str(choose_logo(education.university if education else None)),
     }
 
 
