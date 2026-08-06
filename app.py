@@ -1,10 +1,11 @@
 import logging
+import tempfile
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 
-# Import your orchestrator script and path configuration
-from main import RESUME_PATH, build_card
+# Import your orchestrator script
+from main import build_card
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,33 +15,35 @@ logger = logging.getLogger("Resume Card Builder")
 
 app = FastAPI(title="Resume Card Builder API")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:8800"],  
-    allow_credentials=True,
-    allow_methods=["GET"],
-    allow_headers=["*"],
-)
+@app.get("/")
+def get_frontend():
+    return FileResponse("index.html")
 
-@app.get("/api/resumes/ratings")
-def get_resume_ratings():
-    
-    logger.info("Received request to calculate resume ratings.")
-    
-    # PDF file does not exist
-    if not RESUME_PATH.exists():
-        msg = f"PDF file not found: '{RESUME_PATH.resolve()}'"
-        logger.error(f"{msg}")
+@app.get("/frontend.js")
+def get_frontend_js():
+    return FileResponse("frontend.js", media_type="application/javascript")
+
+@app.post("/score")
+async def score_resume(file: UploadFile = File(...)):
+
+    logger.info(f"Received resume upload '{file.filename}'.")
+
+    if Path(file.filename or "").suffix.lower() != ".pdf":
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=msg
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Uploaded file must be a PDF."
         )
 
     #Actual functionality
     try:
-        logger.info(f"Processing resume '{RESUME_PATH.name}'...")
-        ratings_data = build_card(RESUME_PATH)
-        
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as tmp:
+            tmp.write(await file.read())
+            tmp.flush()
+            tmp_path = Path(tmp.name)
+
+            logger.info(f"Processing resume '{file.filename}'...")
+            ratings_data = build_card(tmp_path)
+
         #Empty dict
         if not ratings_data:
             logger.error("Card build was finished but returned an empty dictionary.")
@@ -48,7 +51,7 @@ def get_resume_ratings():
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Pipeline processed zero records."
             )
-            
+
         logger.info("Pipeline execution successful.")
         return ratings_data
 

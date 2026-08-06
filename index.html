@@ -1,0 +1,34 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<style>
+  /* renders the crop box as a circle, per Cropper.js's round-crop recipe */
+  .cropper-view-box,
+  .cropper-face {
+    border-radius: 50%;
+  }
+
+  /* eases wheel-zoom steps; toggled only while actively scrolling so drag stays 1:1 */
+  .cropper-canvas.cropper-smooth-zoom {
+    transition: left 0.12s ease-out, top 0.12s ease-out, width 0.12s ease-out, height 0.12s ease-out;
+  }
+</style>
+
+<input type="file" id="pdfInput" accept=".pdf">
+<input type="file" id="headshotInput" accept="image/*">
+<button id="generateBtn">Generate</button>
+
+<img id="headshotPreview" style="display:none; width:200px; height:200px; border-radius:50%; object-fit:cover;">
+
+<div id="cropModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; z-index:1000;">
+  <div style="background:#fff; padding:16px; border-radius:8px; text-align:center;">
+    <div id="cropViewport" style="width:320px; height:320px;">
+      <img id="cropImage" style="display:block; max-width:100%;">
+    </div>
+    <div style="margin-top:12px;">
+      <button id="cropCancelBtn">Cancel</button>
+      <button id="cropConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script src="frontend.js"></script>
